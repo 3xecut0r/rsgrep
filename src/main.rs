@@ -7,12 +7,11 @@ use std::process;
 
 
 fn main() -> Result<()> {
-    let _ = define_workflow();
-
-    Ok(())
+    let code = define_workflow()?;
+    process::exit(code);
 }
 
-fn define_workflow() -> Result<()> {
+fn define_workflow() -> Result<i32> {
     // Workflows:
     // 1. pattern = args[0], input = stdin
     // 2. path = args[0], pattern = args[1], input = file
@@ -26,37 +25,41 @@ fn define_workflow() -> Result<()> {
         let reader = BufReader::new(stdin);
 
         if args.len() < 1 {
-            usage("There's no pattern", 2);
+            usage("There's no pattern");
+            return Ok(2)
         }
         let pattern = &args[0];
-        let _ = grep(reader, pattern);
-        return Ok(())
+        let found = grep(reader, pattern)?;
+        return Ok(if found { 0 } else { 1 })
     }
 
     // 2
     if args.len() < 1 {
-        usage("There's no path", 2);
+        usage("There's no path");
+        return Ok(2)
     }
     let path = &args[0];
     if Path::new(&path).exists() {
 
         if args.len() < 2 {
-            usage("There's no pattern", 2);
+            usage("There's no pattern");
+            return Ok(2)
         }
         let pattern = &args[1];
         let file = File::open(&path)?;
         let reader = BufReader::new(file);
-        let _ = grep(reader, pattern);
-        return Ok(())
+        let found = grep(reader, pattern)?;
+        Ok(if found { 0 } else { 1 })
     } else {
-        usage("Can not open / Does not exist a file. / Reading Error", 2);
+        usage("Can not open / Does not exist a file. / Reading Error");
+        Ok(2)
     }
 
-    Ok(())
 }
 
-fn grep<R: BufRead>(mut reader: R, pattern: &str) -> Result<()> {
+fn grep<R: BufRead>(mut reader: R, pattern: &str) -> Result<bool> {
     let mut out = io::stdout().lock();
+    let mut found = false;
     let needle = pattern.as_bytes();
     let mut buf: Vec<u8> = Vec::new();
 
@@ -69,15 +72,14 @@ fn grep<R: BufRead>(mut reader: R, pattern: &str) -> Result<()> {
 
         let matched = buf.windows(needle.len()).any(|w| w == needle);
         if matched {
+            found = true;
             out.write_all(&buf)?;
         }
     }
 
-    Ok(())
+    Ok(found)
 }
 
-fn usage(message: &str, code: i32) {
+fn usage(message: &str) {
     eprintln!("{}", message);
-    process::exit(code);
 }
-
