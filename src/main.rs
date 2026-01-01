@@ -48,20 +48,29 @@ fn define_workflow() -> Result<()> {
         let reader = BufReader::new(file);
         let _ = grep(reader, pattern);
         return Ok(())
+    } else {
+        usage("Can not open / Does not exist a file. / Reading Error", 2);
     }
 
     Ok(())
 }
 
-fn grep<R: BufRead>(reader: R, pattern: &str) -> Result<()> {
+fn grep<R: BufRead>(mut reader: R, pattern: &str) -> Result<()> {
     let mut out = io::stdout().lock();
-    for line in reader.lines() {
-        let line = line?;
+    let mut line = String::new();
+
+    loop {
+        line.clear();
+        let n = reader.read_line(&mut line)?;
+        if n == 0 {
+            break; // EOF
+        }
+
         if line.contains(pattern) {
             out.write_all(line.as_bytes())?;
-            out.write_all(b"\n")?;
         }
     }
+
     Ok(())
 }
 
