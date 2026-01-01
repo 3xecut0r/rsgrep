@@ -1,10 +1,9 @@
 use std::env;
-use std::path::{Path};
 use std::fs::File;
-use std::io::{BufRead, BufReader, Result, Write, IsTerminal};
 use std::io;
+use std::io::{BufRead, BufReader, IsTerminal, Result, Write};
+use std::path::Path;
 use std::process;
-
 
 fn main() -> Result<()> {
     let code = define_workflow()?;
@@ -26,7 +25,7 @@ fn define_workflow() -> Result<i32> {
 
         if args.len() < 1 {
             usage("There's no pattern");
-            return Ok(2)
+            return Ok(2);
         }
         let pattern = &args[0];
         if pattern.is_empty() {
@@ -34,27 +33,26 @@ fn define_workflow() -> Result<i32> {
             return Ok(2);
         }
         let found = grep(reader, pattern)?;
-        return Ok(if found { 0 } else { 1 })
+        return Ok(if found { 0 } else { 1 });
     }
 
     // 2
     if args.len() < 1 {
         usage("There's no path");
-        return Ok(2)
+        return Ok(2);
     }
     let path = &args[0];
     if Path::new(&path).exists() {
-
         if args.len() < 2 {
             usage("There's no pattern");
-            return Ok(2)
+            return Ok(2);
         }
         let pattern = &args[1];
         if pattern.is_empty() {
             usage("Empty pattern");
             return Ok(2);
         }
-        let file = File::open(&path)?;
+        let file = File::open(path)?;
         let reader = BufReader::new(file);
         let found = grep(reader, pattern)?;
         Ok(if found { 0 } else { 1 })
@@ -62,7 +60,6 @@ fn define_workflow() -> Result<i32> {
         usage("Can not open / Does not exist a file. / Reading Error");
         Ok(2)
     }
-
 }
 
 fn grep<R: BufRead>(mut reader: R, pattern: &str) -> Result<bool> {
@@ -89,5 +86,5 @@ fn grep<R: BufRead>(mut reader: R, pattern: &str) -> Result<bool> {
 }
 
 fn usage(message: &str) {
-    eprintln!("{}", message);
+    eprintln!("{message}");
 }
