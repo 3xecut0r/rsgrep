@@ -57,17 +57,19 @@ fn define_workflow() -> Result<()> {
 
 fn grep<R: BufRead>(mut reader: R, pattern: &str) -> Result<()> {
     let mut out = io::stdout().lock();
-    let mut line = String::new();
+    let needle = pattern.as_bytes();
+    let mut buf: Vec<u8> = Vec::new();
 
     loop {
-        line.clear();
-        let n = reader.read_line(&mut line)?;
+        buf.clear();
+        let n = reader.read_until(b'\n', &mut buf)?;
         if n == 0 {
             break; // EOF
         }
 
-        if line.contains(pattern) {
-            out.write_all(line.as_bytes())?;
+        let matched = buf.windows(needle.len()).any(|w| w == needle);
+        if matched {
+            out.write_all(&buf)?;
         }
     }
 
