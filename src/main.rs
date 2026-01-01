@@ -29,6 +29,10 @@ fn define_workflow() -> Result<i32> {
             return Ok(2)
         }
         let pattern = &args[0];
+        if pattern.is_empty() {
+            usage("Empty pattern");
+            return Ok(2);
+        }
         let found = grep(reader, pattern)?;
         return Ok(if found { 0 } else { 1 })
     }
@@ -46,6 +50,10 @@ fn define_workflow() -> Result<i32> {
             return Ok(2)
         }
         let pattern = &args[1];
+        if pattern.is_empty() {
+            usage("Empty pattern");
+            return Ok(2);
+        }
         let file = File::open(&path)?;
         let reader = BufReader::new(file);
         let found = grep(reader, pattern)?;
